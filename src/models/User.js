@@ -26,8 +26,8 @@ class User extends Model {
   }
 
   static associate(models) {
-    this.belongsToMany(models.Address, {
-      through: "UserAddress",
+    this.belongsToMany(models.Share, {
+      through: "Portfolio",
       foreignKey: "userId",
     });
   }

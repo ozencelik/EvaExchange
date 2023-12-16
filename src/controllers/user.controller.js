@@ -1,13 +1,11 @@
 import * as Yup from "yup";
-import Address from "../models/Address";
+import Share from "../models/Share";
 import User from "../models/User";
 import {
   BadRequestError,
   UnauthorizedError,
   ValidationError,
 } from "../utils/ApiError";
-
-//Yup is a JavaScript schema builder for value parsing and validation.
 
 let userController = {
   add: async (req, res, next) => {
@@ -51,12 +49,12 @@ let userController = {
 
       const user = await User.findByPk(userId);
 
-      let address = await Address.findOne({
+      let address = await Share.findOne({
         where: { ...body.address },
       });
 
       if (!address) {
-        address = await Address.create(body.address);
+        address = await Share.create(body.address);
       }
 
       await user.addAddress(address);

@@ -1,16 +1,15 @@
 import Sequelize, { Model } from "sequelize";
 
-class UserAddress extends Model {
+class Portfolio extends Model {
   static init(sequelize) {
     super.init(
       {
         userId: Sequelize.INTEGER,
-        addressId: Sequelize.INTEGER,
+        name: Sequelize.STRING,
       },
       {
         sequelize,
-        timestamps: true,
-        tableName: "UserAddress"
+        timestamps: true
       }
     );
 
@@ -19,8 +18,7 @@ class UserAddress extends Model {
 
   static associate(models) {
     this.belongsTo(models.User, { foreignKey: "userId" });
-    this.belongsTo(models.Address, { foreignKey: "addressId" });
   }
 }
 
-export default UserAddress;
+export default Portfolio;

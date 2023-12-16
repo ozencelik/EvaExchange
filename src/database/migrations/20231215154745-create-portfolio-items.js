@@ -1,29 +1,28 @@
-"use strict";
+'use strict';
 
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  up: (queryInterface, Sequelize) =>
-    queryInterface.createTable("Addresses", {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('PortfolioItems', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      city: {
+      portfolioId: {
         allowNull: false,
-        type: Sequelize.STRING,
+        foreignKey: true,
+        type: Sequelize.INTEGER,
       },
-      state: {
+      shareId: {
         allowNull: false,
-        type: Sequelize.STRING,
+        foreignKey: true,
+        type: Sequelize.INTEGER,
       },
-      neighborhood: {
+      price: {
         allowNull: false,
-        type: Sequelize.STRING,
-      },
-      country: {
-        allowNull: false,
-        type: Sequelize.STRING,
+        type: Sequelize.DECIMAL,
       },
       createdAt: {
         allowNull: false,
@@ -35,7 +34,10 @@ module.exports = {
         type: Sequelize.DATE,
         defaultValue: new Date(),
       },
-    }),
+    });
+  },
 
-  down: (queryInterface) => queryInterface.dropTable("Addresses"),
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('PortfolioItems');
+  }
 };

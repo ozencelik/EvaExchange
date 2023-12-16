@@ -13,6 +13,9 @@ npx sequelize-cli db:create
 # Drops the database
 npx sequelize-cli db:drop
 
+# Generate migrations
+npx sequelize-cli migration:generate --name [name_of_your_migration]
+
 # Load migrations
 npx sequelize-cli db:migrate
 
