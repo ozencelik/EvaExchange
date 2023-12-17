@@ -6,7 +6,8 @@ class PortfolioItem extends Model {
       {
         portfolioId: Sequelize.INTEGER,
         shareId: Sequelize.INTEGER,
-        price: Sequelize.DECIMAL
+        price: Sequelize.DECIMAL,
+        qty: Sequelize.INTEGER
       },
       {
         sequelize,

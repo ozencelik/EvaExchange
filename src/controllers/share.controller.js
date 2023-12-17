@@ -8,6 +8,7 @@ let shareController = {
       const schema = Yup.object().shape({
         symbol: Yup.string().required().matches(/^[A-Z]{3}$/),
         price: Yup.number().required().positive(),
+        qty: Yup.number().required().integer().min(0).max(1000),
       });
 
       if (!(await schema.isValid(req.body))) throw new ValidationError();

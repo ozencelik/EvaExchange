@@ -26,10 +26,7 @@ class User extends Model {
   }
 
   static associate(models) {
-    this.belongsToMany(models.Share, {
-      through: "Portfolio",
-      foreignKey: "userId",
-    });
+    this.hasMany(models.Portfolio, { foreignKey: "userId", onDelete: 'RESTRICT' });
   }
 
   checkPassword(password) {

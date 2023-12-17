@@ -17,6 +17,7 @@ class Portfolio extends Model {
   }
 
   static associate(models) {
+    this.hasMany(models.PortfolioItem, { onDelete: 'RESTRICT' });
     this.belongsTo(models.User, { foreignKey: "userId" });
   }
 }

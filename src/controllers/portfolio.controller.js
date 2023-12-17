@@ -1,32 +1,66 @@
 import * as Yup from "yup";
 import Share from "../models/Share";
-import User from "../models/User";
+import Portfolio from "../models/Portfolio";
 import {
   BadRequestError,
   UnauthorizedError,
   ValidationError,
 } from "../utils/ApiError";
 
-let userController = {
+let portfolioController = {
   add: async (req, res, next) => {
     try {
+      // Schema creation
       const schema = Yup.object().shape({
-        name: Yup.string().required(),
-        email: Yup.string().email().required(),
-        password: Yup.string().required().min(6),
+        name: Yup.string().required()
       });
 
+      // Schema validation
       if (!(await schema.isValid(req.body))) throw new ValidationError();
 
-      const { email } = req.body;
+      const { name } = req.body;
 
-      const userExists = await User.findOne({
-        where: { email },
+      const portfolioExists = await Portfolio.findOne({
+        where: { name },
       });
 
-      if (userExists) throw new BadRequestError();
+      if (portfolioExists) throw new BadRequestError("Already exist!");
 
-      const user = await User.create(req.body);
+      const portfolio = await Portfolio.create({
+        userId: req.userId,
+        name: name
+      });
+
+      return res.status(200).json(portfolio);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  addPortfolio: async (req, res, next) => {
+    try {
+      const { body, userId } = req;
+
+      const schema = Yup.object().shape({
+        city: Yup.string().required(),
+        state: Yup.string().required(),
+        neighborhood: Yup.string().required(),
+        country: Yup.string().required(),
+      });
+
+      if (!(await schema.isValid(body.address))) throw new ValidationError();
+
+      const user = await User.findByPk(userId);
+
+      let address = await Share.findOne({
+        where: { ...body.address },
+      });
+
+      if (!address) {
+        address = await Share.create(body.address);
+      }
+
+      await user.addAddress(address);
 
       return res.status(200).json(user);
     } catch (error) {
@@ -98,4 +132,4 @@ let userController = {
   },
 };
 
-export default userController;
+export default portfolioController;
