@@ -5,7 +5,7 @@ class Share extends Model {
     super.init(
       {
         symbol: Sequelize.STRING,
-        price: Sequelize.DECIMAL,
+        price: Sequelize.DECIMAL(2),
         qty: Sequelize.INTEGER
       },
       {
@@ -18,7 +18,7 @@ class Share extends Model {
   }
 
   static associate(models) {
-    this.hasMany(models.PortfolioItem, { onDelete: 'RESTRICT' });
+    this.hasMany(models.PortfolioItem, { foreignKey: "shareId", onDelete: 'RESTRICT' });
   }
 }
 

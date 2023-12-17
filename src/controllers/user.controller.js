@@ -1,5 +1,5 @@
 import * as Yup from "yup";
-import Share from "../models/Share";
+import Portfolio from "../models/Portfolio";
 import User from "../models/User";
 import {
   BadRequestError,
@@ -92,6 +92,36 @@ let userController = {
       user.destroy();
 
       return res.status(200).json({ msg: "Deleted" });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+
+  //Portfolio
+  createPortfolio: async (req, res, next) => {
+    try {
+      // Schema creation
+      const schema = Yup.object().shape({
+        name: Yup.string().optional() // Optional
+      });
+
+      // Schema validation
+      if (!(await schema.isValid(req.body))) throw new ValidationError();
+
+      const portfolioExists = await Portfolio.findOne({
+        where: { userId: req.userId },
+      });
+
+      if (portfolioExists) throw new BadRequestError("Already exist!");
+
+      const { name } = req.body;
+      const portfolio = await Portfolio.create({
+        userId: req.userId,
+        name: name || 'Portfolio-'.concat(req.userId)
+      });
+
+      return res.status(200).json(portfolio);
     } catch (error) {
       next(error);
     }

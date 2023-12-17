@@ -1,10 +1,9 @@
 import * as Yup from "yup";
 import Share from "../models/Share";
-import User from "../models/User";
+import Portfolio from "../models/Portfolio";
+import PortfolioItem from "../models/PortfolioItem";
 import {
   BadRequestError,
-  NotFoundError,
-  UnauthorizedError,
   ValidationError,
 } from "../utils/ApiError";
 
@@ -16,45 +15,90 @@ let tradeController = {
         Yup.object().shape({
           type: Yup.string().required().matches(/(buy|sell)/),
           symbol: Yup.string().required().matches(/^[A-Z]{3}$/),
-          qty: Yup.number().required().integer().min(0).max(1000,),
+          qty: Yup.number().required().integer().min(1).max(1000),
         })
       );
-
       // Schema validation
       if (!(await schema.isValid(req.body))) throw new ValidationError();
 
+      // Validate portfolio
+      const portfolio = await Portfolio.findOne({ where: { userId: req.userId } });
+      if (!portfolio) throw new BadRequestError("You need to create your portfolio before start trading!");
 
-
-      const trades = req.body;
       // Object to track quantities based on symbols
-      const mergedQuantities = {};// // Iterate through transactions and update quantities
-      trades.forEach(trade => {
+      const mergedQuantities = {};
+      req.body.forEach(trade => {
         const { type, symbol, qty } = trade;
-
-        if (type === 'buy') {
-          // If it's a buy trade, add to the quantity
-          mergedQuantities[symbol] = (mergedQuantities[symbol] || 0) + qty;
-        } else if (type === 'sell') {
-          // If it's a sell trade, subtract from the quantity
-          mergedQuantities[symbol] = (mergedQuantities[symbol] || 0) - qty;
-        }
+        if (type === 'buy') mergedQuantities[symbol] = (mergedQuantities[symbol] || 0) + qty;
+        else if (type === 'sell') mergedQuantities[symbol] = (mergedQuantities[symbol] || 0) - qty;
       });
-
 
       // Convert mergedQuantities to an array for easy iteration
-      const mergedQuantitiesArray = Object.entries(mergedQuantities).map(([symbol, quantity]) => ({ symbol, quantity }));
+      const mergedQuantitiesArray = Object
+        .entries(mergedQuantities)
+        .map(([symbol, quantity]) => ({ symbol, quantity }));
 
       // Loop through the mergedQuantitiesArray
-      mergedQuantitiesArray.forEach(item => {
-        console.log(`Symbol: ${item.symbol}, Quantity: ${item.quantity}`);
+      for (const item of mergedQuantitiesArray) {
+        const share = await Share.findOne({ where: { symbol: item.symbol } });
+        if (!share) throw new BadRequestError("Share symbol not found!");
 
-        const share = Share.findOne({ where: { symbol: item.symbol } });
-        if (!share) return BadRequestError("Share symbol not found!");
-        else if(item.quantity > share.qty) return BadRequestError("Not enough share to buy!");
-      });
+        // Save DB
+        await PortfolioItem.create({
+          portfolioId: portfolio.id,
+          shareId: share.id,
+          price: share.price,
+          qty: item.quantity
+        });
+
+        share.qty -= item.quantity;
+        await Share.update({ qty: share.qty }, { where: { id: share.id } });
+        /*
+        else if (item.quantity > share.qty) throw new BadRequestError("Not enough share to buy!");
+
+        // Get portfolio item if any
+        const portfolioItem = portfolio.PortfolioItems.find(x => x.shareId === share.id);
+        if (!portfolioItem) {
+          if (item.quantity < 0) throw new BadRequestError("You don't have this share!");
+          else if (item.quantity > 0) {
+            //Save to db
+            portfolio.PortfolioItems.push(new PortfolioItem({
+              shareId: share.id,
+              price: share.price,
+              qty: item.quantity
+            }));
+            share.qty -= item.quantity;
+
+            portfolio.save();
+            share.save();
+          }
 
 
-      return res.status(200).json(mergedQuantities);
+        }
+        else {
+
+          if (item.quantity < 0) {
+            if (Math.abs(item.quantity) > portfolioItem.qty) throw new BadRequestError("Not enough share to sell!");
+            portfolioItem.qty -= item.quantity;
+          }
+          else if (item.quantity > 0) {
+            //Save to db
+            portfolio.PortfolioItems.push(new PortfolioItem({
+              shareId: share.id,
+              price: share.price,
+              qty: item.quantity
+            }));
+            share.qty -= item.quantity;
+
+            portfolio.save();
+            share.save();
+          }
+        }*/
+      }
+
+
+      //return res.status(200).json(portfolio);
+      return res.status(200).json(mergedQuantitiesArray);
     } catch (error) {
       next(error);
     }
