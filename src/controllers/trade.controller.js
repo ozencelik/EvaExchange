@@ -1,11 +1,6 @@
 import * as Yup from "yup";
-import Share from "../models/Share";
-import Portfolio from "../models/Portfolio";
-import PortfolioItem from "../models/PortfolioItem";
-import {
-  BadRequestError,
-  ValidationError,
-} from "../utils/ApiError";
+import ValidationError from "../utils/ApiError";
+import { Buy, Sell } from "../utils/TradingFactory";
 
 let tradeController = {
   trade: async (req, res, next) => {
@@ -20,10 +15,6 @@ let tradeController = {
       );
       // Schema validation
       if (!(await schema.isValid(req.body))) throw new ValidationError();
-
-      // Validate portfolio
-      const portfolio = await Portfolio.findOne({ where: { userId: req.userId } });
-      if (!portfolio) throw new BadRequestError("You need to create your portfolio before start trading!");
 
       // Object to track quantities based on symbols
       const mergedQuantities = {};
@@ -40,65 +31,15 @@ let tradeController = {
 
       // Loop through the mergedQuantitiesArray
       for (const item of mergedQuantitiesArray) {
-        const share = await Share.findOne({ where: { symbol: item.symbol } });
-        if (!share) throw new BadRequestError("Share symbol not found!");
+        var newTrade = item.quantity > 0
+          ? new Buy(req.userId, item)
+          : new Sell(req.userId, item);
 
-        // Save DB
-        await PortfolioItem.create({
-          portfolioId: portfolio.id,
-          shareId: share.id,
-          price: share.price,
-          qty: item.quantity
-        });
-
-        share.qty -= item.quantity;
-        await Share.update({ qty: share.qty }, { where: { id: share.id } });
-        /*
-        else if (item.quantity > share.qty) throw new BadRequestError("Not enough share to buy!");
-
-        // Get portfolio item if any
-        const portfolioItem = portfolio.PortfolioItems.find(x => x.shareId === share.id);
-        if (!portfolioItem) {
-          if (item.quantity < 0) throw new BadRequestError("You don't have this share!");
-          else if (item.quantity > 0) {
-            //Save to db
-            portfolio.PortfolioItems.push(new PortfolioItem({
-              shareId: share.id,
-              price: share.price,
-              qty: item.quantity
-            }));
-            share.qty -= item.quantity;
-
-            portfolio.save();
-            share.save();
-          }
-
-
-        }
-        else {
-
-          if (item.quantity < 0) {
-            if (Math.abs(item.quantity) > portfolioItem.qty) throw new BadRequestError("Not enough share to sell!");
-            portfolioItem.qty -= item.quantity;
-          }
-          else if (item.quantity > 0) {
-            //Save to db
-            portfolio.PortfolioItems.push(new PortfolioItem({
-              shareId: share.id,
-              price: share.price,
-              qty: item.quantity
-            }));
-            share.qty -= item.quantity;
-
-            portfolio.save();
-            share.save();
-          }
-        }*/
+        await newTrade.validate();
+        await newTrade.commit();
       }
 
-
-      //return res.status(200).json(portfolio);
-      return res.status(200).json(mergedQuantitiesArray);
+      return res.status(200);
     } catch (error) {
       next(error);
     }
