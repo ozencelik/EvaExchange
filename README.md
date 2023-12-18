@@ -1,8 +1,4 @@
 # EvaExchange
-
-![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
-![Sequelize](https://img.shields.io/badge/Sequelize-52B0E7?style=for-the-badge&logo=Sequelize&logoColor=white)
-
  This project is built in the context of eva coding interview.
 
 ## Commands for sequelize
@@ -13,6 +9,7 @@ npx sequelize-cli db:create
 # Drops the database
 npx sequelize-cli db:drop
 
+
 # Generate migrations
 npx sequelize-cli migration:generate --name [name_of_your_migration]
 
@@ -22,5 +19,13 @@ npx sequelize-cli db:migrate
 # Undo migrations
 npx sequelize-cli db:migrate:undo:all
 
+
+# Generate seeders
+npx sequelize-cli seed:generate --name [name_of_your_migration]
+
 # Load seeders
 npx sequelize-cli db:seed:all
+
+# Undo seeders
+npx sequelize-cli db:seed:undo:all
+

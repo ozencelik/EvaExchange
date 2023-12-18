@@ -1,5 +1,5 @@
 import * as Yup from "yup";
-import ValidationError from "../utils/ApiError";
+import { ValidationError } from "../utils/ApiError";
 import { Buy, Sell } from "../utils/TradingFactory";
 
 let tradeController = {
@@ -39,7 +39,7 @@ let tradeController = {
         await newTrade.commit();
       }
 
-      return res.status(200);
+      return res.status(200).json({ 'msg': 'Trades committed succesfully ✅' });;
     } catch (error) {
       next(error);
     }

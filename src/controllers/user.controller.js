@@ -83,21 +83,6 @@ let userController = {
     }
   },
 
-  delete: async (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const user = await User.findByPk(id);
-      if (!user) throw new BadRequestError();
-
-      user.destroy();
-
-      return res.status(200).json({ msg: "Deleted" });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-
   //Portfolio
   createPortfolio: async (req, res, next) => {
     try {
